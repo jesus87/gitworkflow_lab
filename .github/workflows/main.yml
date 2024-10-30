@@ -1,0 +1,51 @@
+name: CI Workflow
+
+on:
+  pull_request:
+    branches:
+      - main  # Define sobre qué ramas se aplicará este workflow solo usare main para este ejemplo
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.20  # Cambia según tu versión de Go
+
+      - name: Run Go Linter
+        run: |
+          go install golang.org/x/lint/golint@latest
+          golint ./...  # Linting de todo el proyecto
+
+  test:
+    needs: lint  # Asegura que las pruebas solo corran después del linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.20
+
+      - name: Run Tests
+        run: go test ./... -v  # Ejecuta todas las pruebas
+
+  deploy:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    needs: test  # Despliega solo si las pruebas pasaron y la PR se ha mergeado
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy App (Placeholder)
+        run: echo "Deployment successful!"
